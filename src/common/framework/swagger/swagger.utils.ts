@@ -17,7 +17,7 @@ export function SwaggerDocumentation(options: SwaggerOptions, ...operation: any[
       description: options.message,
       schema: {
         properties: {
-          success: { type: 'boolean', example: options.success },
+          statusCode: { type: 'boolean', example: options.statusCode },
           message: { type: 'string', example: options.message }
         }
       }
