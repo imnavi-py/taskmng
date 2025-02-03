@@ -23,8 +23,13 @@ export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectsService.create(createProjectDto)
+  async create(@Body() createProjectDto: CreateProjectDto, @Res() res: Response) {
+    const createProject = await this.projectsService.create(createProjectDto)
+    res.status(HttpStatus.CREATED).json({
+      statusCode: HttpStatus.CREATED,
+      data: createProject,
+      message: 'Project created!'
+    })
   }
 
   @Get()
@@ -62,17 +67,31 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(+id)
+  async findOne(@Param('id') id: string, @Res() res: Response) {
+    const project = await this.projectsService.findOne(+id)
+    res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      data: project,
+      message: 'Project found!'
+    })
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(+id, updateProjectDto)
+  async update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto, @Res() res: Response) {
+    const updateProject = await this.projectsService.update(+id, updateProjectDto)
+    res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      data: updateProject,
+      message: 'Project updated!'
+    })
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectsService.remove(+id)
+  async remove(@Param('id') id: string, @Res() res: Response) {
+    const deleteProject = await this.projectsService.remove(+id)
+    res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: 'Project deleted!'
+    })
   }
 }
