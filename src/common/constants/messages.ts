@@ -48,5 +48,14 @@ export enum MSG {
   USER_COULD_NOT_BE_UPDATED = 'USER_COULD_NOT_BE_UPDATED',
 
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
-  USERS_FETCHED = 'USERS_FETCHED'
+  USERS_FETCHED = 'USERS_FETCHED',
+  PROJECT_CREATED = 'Project created successfully',
+  TASK_CREATED = 'Task created successfully',
+  FETCH_ALL_PROJECTS = 'Successfully fetched all Projects',
+  FETCH_ALL_TASKS = 'Successfully fetched all Tasks',
+  FETCH_ONE_PROJECT = 'Successfully fetched Project by id',
+  UPDATE_OPROJECT = 'Project updated successfully',
+  UPDATE_TASK = 'Task updated successfully',
+  DELETE_PROJECT = 'Successfully deleted Project',
+  DELETE_TASK = 'Successfully deleted Task'
 }

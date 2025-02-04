@@ -21,13 +21,14 @@ import { Response } from 'express'
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
 import { SwaggerDocumentation } from '~/common/framework/swagger/swagger.utils'
 import { CreateProjectDto } from '../projects/dto/create-project.dto'
+import { MSG } from '~/common/constants/messages'
 
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @SwaggerDocumentation(
-    { dto: CreateTaskDto, message: 'Project created!', statusCode: 201, success: true },
+    { dto: CreateTaskDto, message: MSG.TASK_CREATED, statusCode: 201, success: true },
     ApiOperation({ summary: 'Create a new Task' })
   )
   @Post()
@@ -41,7 +42,7 @@ export class TasksController {
   }
 
   @SwaggerDocumentation(
-    { message: 'Successfully fetched all Tasks', statusCode: 200, success: true },
+    { message: MSG.FETCH_ALL_TASKS, statusCode: 200, success: true },
     ApiOperation({ summary: 'Get all Tasks' })
   )
   @ApiQuery({ name: 'status', required: false, description: 'Filter tasks by status' })
@@ -106,7 +107,7 @@ export class TasksController {
 
   @ApiParam({ name: 'id', description: 'Task ID' })
   @SwaggerDocumentation(
-    { dto: UpdateTaskDto, message: 'Task updated successfully', statusCode: 200, success: true },
+    { dto: UpdateTaskDto, message: MSG.UPDATE_TASK, statusCode: 200, success: true },
     ApiOperation({ summary: 'Update an existing Task' })
   )
   @Put(':id')
@@ -131,7 +132,7 @@ export class TasksController {
 
   @ApiParam({ name: 'id', description: 'Task ID' })
   @SwaggerDocumentation(
-    { message: 'Successfully deleted Task', statusCode: 200, success: true },
+    { message: MSG.UPDATE_TASK, statusCode: 200, success: true },
     ApiOperation({ summary: 'Delete a Task' })
   )
   @Delete(':id')
