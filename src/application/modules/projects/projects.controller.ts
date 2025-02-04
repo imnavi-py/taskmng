@@ -19,13 +19,14 @@ import { Project, ProjectStatusEnum } from '@prisma/client'
 import { Response } from 'express'
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
 import { SwaggerDocumentation } from '~/common/framework/swagger/swagger.utils'
+import { MSG } from '~/common/constants/messages'
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @SwaggerDocumentation(
-    { dto: CreateProjectDto, message: 'Project created successfully', statusCode: 201, success: true },
+    { dto: CreateProjectDto, message: MSG.PROJECT_CREATED, statusCode: 201, success: true },
     ApiOperation({ summary: 'Create a new Project' })
   )
   @Post()
@@ -39,7 +40,7 @@ export class ProjectsController {
   }
 
   @SwaggerDocumentation(
-    { message: 'Successfully fetched all Projects', statusCode: 200, success: true },
+    { message: MSG.FETCH_ALL_PROJECTS, statusCode: 200, success: true },
     ApiOperation({ summary: 'Get all Projects' })
   )
   @ApiQuery({ name: 'status', required: false, description: 'Filter tasks by status' })
@@ -80,7 +81,7 @@ export class ProjectsController {
 
   @ApiParam({ name: 'id', description: 'Project ID' })
   @SwaggerDocumentation(
-    { message: 'Successfully fetched Project by id', statusCode: 200, success: true },
+    { message: MSG.FETCH_ONE_PROJECT, statusCode: 200, success: true },
     ApiOperation({ summary: 'Get a Project by id' })
   )
   @Get(':id')
@@ -95,7 +96,7 @@ export class ProjectsController {
 
   @ApiParam({ name: 'id', description: 'Project ID' })
   @SwaggerDocumentation(
-    { dto: UpdateProjectDto, message: 'Project updated successfully', statusCode: 200, success: true },
+    { dto: UpdateProjectDto, message: MSG.UPDATE_OPROJECT, statusCode: 200, success: true },
     ApiOperation({ summary: 'Update an existing Project' })
   )
   @Put(':id')
@@ -110,7 +111,7 @@ export class ProjectsController {
 
   @ApiParam({ name: 'id', description: 'Project ID' })
   @SwaggerDocumentation(
-    { message: 'Successfully deleted Project', statusCode: 200, success: true },
+    { message: MSG.DELETE_PROJECT, statusCode: 200, success: true },
     ApiOperation({ summary: 'Delete a Project' })
   )
   @Delete(':id')
