@@ -82,7 +82,7 @@ export class TasksController {
 
   @ApiParam({ name: 'id', description: 'Task ID' })
   @SwaggerDocumentation(
-    { message: 'Successfully fetched Task by id', statusCode: 201, success: true },
+    { message: 'Successfully fetched Task by id', statusCode: 200, success: true },
     ApiOperation({ summary: 'Get a Task by id' })
   )
   @Get(':id')

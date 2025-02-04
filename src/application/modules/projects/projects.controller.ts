@@ -38,8 +38,10 @@ export class ProjectsController {
     })
   }
 
-  @ApiOperation({ summary: 'Get all Projects' })
-  @ApiResponse({ status: 200, description: 'Successfully fetched all Projects' })
+  @SwaggerDocumentation(
+    { message: 'Successfully fetched all Projects', statusCode: 200, success: true },
+    ApiOperation({ summary: 'Get all Projects' })
+  )
   @ApiQuery({ name: 'status', required: false, description: 'Filter tasks by status' })
   @ApiQuery({ name: 'name', required: false, description: 'Filter tasks by title' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number for pagination' })
@@ -76,9 +78,11 @@ export class ProjectsController {
     }
   }
 
-  @ApiOperation({ summary: 'Get a Project by id' })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Successfully fetched Project by id' })
+  @SwaggerDocumentation(
+    { message: 'Successfully fetched Project by id', statusCode: 200, success: true },
+    ApiOperation({ summary: 'Get a Project by id' })
+  )
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     const project = await this.projectsService.findOne(+id)
@@ -104,9 +108,11 @@ export class ProjectsController {
     })
   }
 
-  @ApiOperation({ summary: 'Delete a Project' })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Successfully deleted Project' })
+  @SwaggerDocumentation(
+    { message: 'Successfully deleted Project', statusCode: 200, success: true },
+    ApiOperation({ summary: 'Delete a Project' })
+  )
   @Delete(':id')
   async remove(@Param('id') id: string, @Res() res: Response) {
     const deleteProject = await this.projectsService.remove(+id)
