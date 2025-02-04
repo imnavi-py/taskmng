@@ -40,8 +40,10 @@ export class TasksController {
     })
   }
 
-  @ApiOperation({ summary: 'Get all Tasks' })
-  @ApiResponse({ status: 200, description: 'Successfully fetched all Tasks' })
+  @SwaggerDocumentation(
+    { message: 'Successfully fetched all Tasks', statusCode: 200, success: true },
+    ApiOperation({ summary: 'Get all Tasks' })
+  )
   @ApiQuery({ name: 'status', required: false, description: 'Filter tasks by status' })
   @ApiQuery({ name: 'title', required: false, description: 'Filter tasks by title' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number for pagination' })
@@ -78,9 +80,11 @@ export class TasksController {
     }
   }
 
-  @ApiOperation({ summary: 'Get a Task by id' })
   @ApiParam({ name: 'id', description: 'Task ID' })
-  @ApiResponse({ status: 200, description: 'Successfully fetched Task by id' })
+  @SwaggerDocumentation(
+    { message: 'Successfully fetched Task by id', statusCode: 201, success: true },
+    ApiOperation({ summary: 'Get a Task by id' })
+  )
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
@@ -125,9 +129,11 @@ export class TasksController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete a Task' })
   @ApiParam({ name: 'id', description: 'Task ID' })
-  @ApiResponse({ status: 200, description: 'Successfully deleted Task' })
+  @SwaggerDocumentation(
+    { message: 'Successfully deleted Task', statusCode: 200, success: true },
+    ApiOperation({ summary: 'Delete a Task' })
+  )
   @Delete(':id')
   async remove(@Param('id') id: string, @Res() res: Response) {
     const deleteTask = await this.tasksService.remove(+id)
