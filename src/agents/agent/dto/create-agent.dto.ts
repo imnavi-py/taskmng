@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator'
+import { IsString, IsOptional, IsNotEmpty, IsObject } from 'class-validator'
 
 export class CreateAgentDto {
   @IsNotEmpty()
@@ -16,6 +16,8 @@ export class CreateAgentDto {
   @IsOptional()
   @IsString()
   description?: string
+
+  params: Record<string, any>
 
   // @IsNotEmpty()
   // @IsString()
