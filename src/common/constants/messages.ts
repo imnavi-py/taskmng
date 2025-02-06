@@ -57,5 +57,8 @@ export enum MSG {
   UPDATE_OPROJECT = 'Project updated successfully',
   UPDATE_TASK = 'Task updated successfully',
   DELETE_PROJECT = 'Successfully deleted Project',
-  DELETE_TASK = 'Successfully deleted Task'
+  DELETE_TASK = 'Successfully deleted Task',
+  AGENT_CREATED = 'Agent created successfully!',
+  FETCH_ALL_AGENTS = 'Agents retrieved successfully!',
+  FETCH_ONE_AGENT = 'Agent found successfully!'
 }
