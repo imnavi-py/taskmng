@@ -8,7 +8,7 @@ export class AgentController {
 
   @Post()
   async handleAgent(@Body() createAgentDto: CreateAgentDto, @Query() queryParams: Record<string, any>) {
-    if (!queryParams) {
+    if (!queryParams || Object.keys(queryParams).length === 0) {
       throw new BadRequestException('Query params are required in the request')
     }
 

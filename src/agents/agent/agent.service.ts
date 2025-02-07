@@ -17,7 +17,7 @@ export class AgentService {
   ) {}
 
   async createAgent(data: CreateAgentDto) {
-    if (!data.params) {
+    if (!data.params || Object.keys(data.params).length === 0) {
       throw new Error('params is required and cannot be empty')
     }
 
@@ -32,14 +32,14 @@ export class AgentService {
     })
   }
 
-  async findById(id: number): Promise<any> {
+  async findById(id: number): Promise<Omit<Agent, 'webhook'>> {
     const agent = await this.prisma.agent.findUnique({
       where: { id }
     })
     if (!agent) {
       throw new NotFoundException(`Agent ${id} not found`)
     }
-    const { webhook, ...result } = agent
+    const { webhook: _, ...result } = agent
     return result
   }
 
