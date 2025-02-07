@@ -58,7 +58,7 @@ export class AgentService {
   private async updateAgentStatus(agentId: number, status: 'ok' | 'faild') {
     return this.prisma.agent.update({
       where: { id: agentId },
-      data: { is_worked: status }
+      data: { status: status }
     })
   }
 }
