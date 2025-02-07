@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { CreateAgentDto } from './dto/create-agent.dto'
 import { PrismaService } from '~/common/modules/prisma/prisma.service'
+import { Agent } from '@prisma/client'
 
 type WebhookResponse = {
   status: number
@@ -16,7 +17,7 @@ export class AgentService {
   ) {}
 
   async createAgent(data: CreateAgentDto) {
-    if (!data.params || Object.keys(data.params).length === 0) {
+    if (!data.params) {
       throw new Error('params is required and cannot be empty')
     }
 
@@ -31,14 +32,20 @@ export class AgentService {
     })
   }
 
-  async findById(agentId: number) {
-    return this.prisma.agent.findUnique({
-      where: { id: agentId }
+  async findById(id: number): Promise<any> {
+    const agent = await this.prisma.agent.findUnique({
+      where: { id }
     })
+    if (!agent) {
+      throw new NotFoundException(`Agent ${id} not found`)
+    }
+    const { webhook, ...result } = agent
+    return result
   }
 
   async findAll() {
-    return this.prisma.agent.findMany()
+    const agents = await this.prisma.agent.findMany()
+    return agents.map(({ webhook, ...result }) => result)
   }
 
   async sendToWebhook(

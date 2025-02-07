@@ -8,7 +8,7 @@ export class AgentController {
 
   @Post()
   async handleAgent(@Body() createAgentDto: CreateAgentDto, @Query() queryParams: Record<string, any>) {
-    if (!queryParams || Object.keys(queryParams).length === 0) {
+    if (!queryParams) {
       throw new BadRequestException('Query params are required in the request')
     }
 
@@ -38,8 +38,8 @@ export class AgentController {
   }
 
   @Get(':id')
-  async findById(@Param('id') id: number) {
-    const agent = await this.agentService.findById(id)
+  async findById(@Param('id') id: string) {
+    const agent = await this.agentService.findById(+id)
     if (!agent) {
       throw new BadRequestException('Agent not found')
     }
