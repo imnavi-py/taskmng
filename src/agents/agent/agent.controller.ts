@@ -11,24 +11,7 @@ export class AgentController {
     if (!queryParams || Object.keys(queryParams).length === 0) {
       throw new BadRequestException('Query params are required in the request')
     }
-
-    const savedAgent = await this.agentService.createAgent({
-      ...createAgentDto,
-      params: queryParams
-    })
-
-    const { webhook, ...payload } = createAgentDto
-
-    try {
-      const response = await this.agentService.sendToWebhook(webhook, payload, savedAgent.id, queryParams)
-
-      return {
-        result: response
-      }
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      throw new BadRequestException(error.message || 'An error occurred while sending data to the webhook')
-    }
+    return this.agentService.createAgent(createAgentDto, queryParams)
   }
 
   @Get()

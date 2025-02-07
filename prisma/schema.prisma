@@ -37,7 +37,7 @@ model Agent {
   description String?
   params    Json
   // additionalParams Json?
-  is_worked   workStatusEnum  @default(ok)
+  status   workStatusEnum  @default(ok)
   createdAt   DateTime @default(now())
 }
 

@@ -1,13 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { CreateAgentDto } from './dto/create-agent.dto'
 import { PrismaService } from '~/common/modules/prisma/prisma.service'
 import { Agent } from '@prisma/client'
-
-type WebhookResponse = {
-  status: number
-  data: any
-}
 
 @Injectable()
 export class AgentService {
@@ -16,20 +11,32 @@ export class AgentService {
     private readonly prisma: PrismaService
   ) {}
 
-  async createAgent(data: CreateAgentDto) {
-    if (!data.params || Object.keys(data.params).length === 0) {
-      throw new Error('params is required and cannot be empty')
-    }
-
-    return this.prisma.agent.create({
+  async createAgent(data: CreateAgentDto, queryParams: Record<string, any>) {
+    const agent = await this.prisma.agent.create({
       data: {
         webhook: data.webhook,
         logo: data.logo,
         title: data.title,
         description: data.description,
-        params: data.params
+        params: queryParams
       }
     })
+    try {
+      const response = await this.httpService.axiosRef.post(data.webhook, queryParams)
+
+      if (response.status !== 200) {
+        await this.updateAgentStatus(agent.id, 'faild')
+        throw new Error('Webhook responded with a non-200 status code')
+      }
+
+      await this.updateAgentStatus(agent.id, 'ok')
+      return agent
+    } catch (error) {
+      await this.updateAgentStatus(agent.id, 'faild')
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+    }
   }
 
   async findById(id: number): Promise<Omit<Agent, 'webhook'>> {
@@ -46,34 +53,6 @@ export class AgentService {
   async findAll() {
     const agents = await this.prisma.agent.findMany()
     return agents.map(({ webhook, ...result }) => result)
-  }
-
-  async sendToWebhook(
-    webhookUrl: string,
-    payload: { logo?: string; title: string; description?: string },
-    agentId: number,
-    queryParams: Record<string, any>
-  ): Promise<WebhookResponse> {
-    const urlWithParams = new URL(webhookUrl)
-
-    Object.keys(queryParams).forEach(key => {
-      urlWithParams.searchParams.append(key, queryParams[key])
-    })
-
-    try {
-      const response = await this.httpService.axiosRef.post<WebhookResponse>(urlWithParams.toString(), payload)
-
-      if (response.status !== 200) {
-        await this.updateAgentStatus(agentId, 'faild')
-        throw new Error('Webhook responded with a non-200 status code')
-      }
-
-      return { status: response.status, data: response.data }
-    } catch (error) {
-      await this.updateAgentStatus(agentId, 'faild')
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      throw error.response?.data || error.message
-    }
   }
 
   private async updateAgentStatus(agentId: number, status: 'ok' | 'faild') {
