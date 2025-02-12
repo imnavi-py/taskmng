@@ -2,7 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { HttpService } from '@nestjs/axios'
 import { CreateAgentDto } from './dto/create-agent.dto'
 import { PrismaService } from '~/common/modules/prisma/prisma.service'
-import { Agent, workStatusEnum } from '@prisma/client'
+import { Agent } from '@prisma/client'
+import { randomInt } from 'crypto'
+import FormData = require('form-data')
 
 @Injectable()
 export class AgentService {
@@ -11,28 +13,72 @@ export class AgentService {
     private readonly prisma: PrismaService
   ) {}
 
-  async createAgent(data: CreateAgentDto, queryParams: Record<string, any>) {
+  async createAgent(data: CreateAgentDto, file?: Express.Multer.File) {
+    let fileBuffer: Buffer | null = null
+    let fileName: string | null = null
+    if (file) {
+      console.log('have file')
+      fileBuffer = file.buffer
+      fileName = file.originalname
+    }
+
+    if (!file && data.file) {
+      try {
+        fileBuffer = Buffer.from(data.file, 'base64')
+        fileName = 'uploadedFile' + randomInt(0, 100000).toString()
+      } catch (error) {
+        throw new BadRequestException('Bad file format!')
+      }
+    }
     const agent = await this.prisma.agent.create({
       data: {
         webhook: data.webhook,
         logo: data.logo,
         title: data.title,
         description: data.description,
-        params: queryParams
+        params: data.params,
+        file: fileBuffer
       }
     })
-    try {
-      const response = await this.httpService.axiosRef.post(data.webhook, queryParams)
 
-      if (response.status === 200) {
-        await this.updateAgentStatus(agent.id, workStatusEnum.ok)
+    if (fileBuffer) {
+      const formData = new FormData()
+      formData.append('file', fileBuffer, fileName || 'uploaded_file')
+      formData.append('params', JSON.stringify(data.params))
+
+      try {
+        const response = await this.httpService.axiosRef.post(data.webhook, formData)
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
+        console.log(`this is FormDataParam: ${response}`)
+        if (response.status === 200) {
+          await this.updateAgentStatus(agent.id, 'ok')
+          return {
+            agent,
+            msg: 'ok'
+          }
+        }
+      } catch (error) {
+        await this.updateAgentStatus(agent.id, 'faild')
+        throw new BadRequestException(`An error Accourded: ${error}`)
       }
-    } catch {
-      await this.updateAgentStatus(agent.id, workStatusEnum.faild)
-      throw new BadRequestException('Failed to send data to webhook: Webhook not reachable')
-    }
+    } else {
+      console.log(data.params)
+      try {
+        const response = await this.httpService.axiosRef.post(data.webhook, data.params)
 
-    return agent
+        if (response.status === 200) {
+          await this.updateAgentStatus(agent.id, 'ok')
+        }
+      } catch {
+        await this.updateAgentStatus(agent.id, 'faild')
+        throw new BadRequestException('Failed to send data to webhook: Webhook not reachable')
+      }
+
+      return {
+        agent,
+        msg: 'ok'
+      }
+    }
   }
 
   async findById(id: number): Promise<Omit<Agent, 'webhook'>> {
@@ -51,7 +97,7 @@ export class AgentService {
     return agents.map(({ webhook, ...result }) => result)
   }
 
-  private async updateAgentStatus(agentId: number, status: workStatusEnum) {
+  private async updateAgentStatus(agentId: number, status: 'ok' | 'faild') {
     return this.prisma.agent.update({
       where: { id: agentId },
       data: { status: status }

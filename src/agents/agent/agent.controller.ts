@@ -1,17 +1,32 @@
-import { Controller, Post, Body, Query, BadRequestException, Get, Param } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Body,
+  Query,
+  BadRequestException,
+  Get,
+  Param,
+  UseInterceptors,
+  UploadedFile
+} from '@nestjs/common'
 import { AgentService } from './agent.service'
 import { CreateAgentDto } from './dto/create-agent.dto'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 @Controller('agent')
 export class AgentController {
   constructor(private readonly agentService: AgentService) {}
 
   @Post()
-  async handleAgent(@Body() createAgentDto: CreateAgentDto, @Query() queryParams: Record<string, any>) {
-    if (!queryParams || Object.keys(queryParams).length === 0) {
-      throw new BadRequestException('Query params are required in the request')
+  @UseInterceptors(FileInterceptor('file'))
+  async handleAgent(@Body() createAgentDto: CreateAgentDto, @UploadedFile() file?: Express.Multer.File) {
+    console.log('Received JSON Data:', createAgentDto)
+    if (file) {
+      console.log('Received File:', file.originalname)
     }
-    return this.agentService.createAgent(createAgentDto, queryParams)
+    console.log(createAgentDto.params)
+    console.log('Data received successfully')
+    return await this.agentService.createAgent(createAgentDto, file)
   }
 
   @Get()
