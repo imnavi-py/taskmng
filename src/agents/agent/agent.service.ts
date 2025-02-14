@@ -5,6 +5,7 @@ import { PrismaService } from '~/common/modules/prisma/prisma.service'
 import { Agent } from '@prisma/client'
 import { randomInt } from 'crypto'
 import FormData = require('form-data')
+import * as mime from 'mime-types'
 
 @Injectable()
 export class AgentService {
@@ -16,16 +17,20 @@ export class AgentService {
   async createAgent(data: CreateAgentDto, file?: Express.Multer.File) {
     let fileBuffer: Buffer | null = null
     let fileName: string | null = null
+    let fileType: string = 'unknown'
     if (file) {
       console.log('have file')
       fileBuffer = file.buffer
       fileName = file.originalname
+      fileType = file.mimetype
     }
 
     if (!file && data.file) {
       try {
         fileBuffer = Buffer.from(data.file, 'base64')
         fileName = 'uploadedFile' + randomInt(0, 100000).toString()
+        const mimeType = mime.lookup(fileName)
+        fileType = mimeType ? mimeType.toString() : 'application/octet-stream'
       } catch (error) {
         throw new BadRequestException('Bad file format!')
       }
@@ -48,13 +53,13 @@ export class AgentService {
 
       try {
         const response = await this.httpService.axiosRef.post(data.webhook, formData)
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
-        console.log(`this is FormDataParam: ${response}`)
         if (response.status === 200) {
           await this.updateAgentStatus(agent.id, 'ok')
           return {
             agent,
-            msg: 'ok'
+            msg: 'ok',
+            file: fileBuffer,
+            file_Type: fileType
           }
         }
       } catch (error) {
