@@ -7,6 +7,9 @@ import { randomInt } from 'crypto'
 import FormData = require('form-data')
 import * as mime from 'mime-types'
 
+interface ResponseData {
+  file_response?: string
+}
 @Injectable()
 export class AgentService {
   constructor(
@@ -52,18 +55,23 @@ export class AgentService {
       formData.append('params', JSON.stringify(data.params))
 
       try {
-        const response = await this.httpService.axiosRef.post(data.webhook, formData)
+        const response = await this.httpService.axiosRef.post<ResponseData>(data.webhook, formData)
         if (response.status === 200) {
-          await this.updateAgentStatus(agent.id, 'ok')
+          let fileInResponse: Buffer | null = null
+          if (response.data && response.data.file_response) {
+            fileInResponse = Buffer.from(response.data.file_response, 'base64')
+          }
+          await this.updateAgentField(agent.id, 'ok', fileInResponse)
           return {
             agent,
             msg: 'ok',
             file: fileBuffer,
-            file_Type: fileType
+            file_Type: fileType,
+            file_response: fileInResponse
           }
         }
       } catch (error) {
-        await this.updateAgentStatus(agent.id, 'faild')
+        await this.updateAgentField(agent.id, 'faild')
         throw new BadRequestException(`An error Accourded: ${error}`)
       }
     } else {
@@ -72,10 +80,10 @@ export class AgentService {
         const response = await this.httpService.axiosRef.post(data.webhook, data.params)
 
         if (response.status === 200) {
-          await this.updateAgentStatus(agent.id, 'ok')
+          await this.updateAgentField(agent.id, 'ok')
         }
       } catch {
-        await this.updateAgentStatus(agent.id, 'faild')
+        await this.updateAgentField(agent.id, 'faild')
         throw new BadRequestException('Failed to send data to webhook: Webhook not reachable')
       }
 
@@ -102,10 +110,10 @@ export class AgentService {
     return agents.map(({ webhook, ...result }) => result)
   }
 
-  private async updateAgentStatus(agentId: number, status: 'ok' | 'faild') {
+  private async updateAgentField(agentId: number, status: 'ok' | 'faild', editedFile?: Buffer | null) {
     return this.prisma.agent.update({
       where: { id: agentId },
-      data: { status: status }
+      data: { status: status, file_response: editedFile }
     })
   }
 }
