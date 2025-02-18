@@ -8,7 +8,7 @@ import FormData = require('form-data')
 import * as mime from 'mime-types'
 
 interface ResponseData {
-  file_response?: string
+  file?: string
 }
 @Injectable()
 export class AgentService {
@@ -21,22 +21,12 @@ export class AgentService {
     let fileBuffer: Buffer | null = null
     let fileName: string | null = null
     let fileType: string = 'unknown'
+    let fileResponse: Buffer | null = null
     if (file) {
       console.log('have file')
       fileBuffer = file.buffer
       fileName = file.originalname
       fileType = file.mimetype
-    }
-
-    if (!file && data.file) {
-      try {
-        fileBuffer = Buffer.from(data.file, 'base64')
-        fileName = 'uploadedFile' + randomInt(0, 100000).toString()
-        const mimeType = mime.lookup(fileName)
-        fileType = mimeType ? mimeType.toString() : 'application/octet-stream'
-      } catch (error) {
-        throw new BadRequestException('Bad file format!')
-      }
     }
     const agent = await this.prisma.agent.create({
       data: {
@@ -45,64 +35,67 @@ export class AgentService {
         title: data.title,
         description: data.description,
         params: data.params,
-        file: fileBuffer
+        file: fileBuffer,
+        file_response: fileResponse
       }
     })
 
-    if (fileBuffer) {
-      const formData = new FormData()
+    const formData = new FormData()
+    formData.append('params', JSON.stringify(data.params))
+    if (fileBuffer != null) {
       formData.append('file', fileBuffer, fileName || 'uploaded_file')
-      formData.append('params', JSON.stringify(data.params))
+    }
 
-      try {
-        const response = await this.httpService.axiosRef.post<ResponseData>(data.webhook, formData)
-        if (response.status === 200) {
-          let fileInResponse: Buffer | null = null
-          if (response.data && response.data.file_response) {
-            fileInResponse = Buffer.from(response.data.file_response, 'base64')
-          }
-          await this.updateAgentField(agent.id, 'ok', fileInResponse)
-          return {
-            agent,
-            msg: 'ok',
-            file: fileBuffer,
-            file_Type: fileType,
-            file_response: fileInResponse
-          }
+    try {
+      const response = await this.httpService.axiosRef.post<ResponseData>(data.webhook, formData)
+      console.log('axiosRef')
+      console.log(response.status)
+      if (response.status === 200) {
+        console.log(response.data.file)
+        // let fileInResponse: Buffer | null = null
+        if (response.data && response.data.file) {
+          console.log('1')
+          fileResponse = Buffer.from(response.data.file, 'base64')
         }
-      } catch (error) {
-        await this.updateAgentField(agent.id, 'faild')
-        throw new BadRequestException(`An error Accourded: ${error}`)
-      }
-    } else {
-      console.log(data.params)
-      try {
-        const response = await this.httpService.axiosRef.post(data.webhook, data.params)
-
-        if (response.status === 200) {
-          await this.updateAgentField(agent.id, 'ok')
+        console.log('2')
+        await this.updateAgentField(agent.id, 'ok', fileResponse)
+        console.log('updateAgent')
+        const updatedAgent = await this.prisma.agent.findUnique({
+          where: { id: agent.id }
+        })
+        return {
+          updatedAgent,
+          msg: 'ok'
+          // file: fileBuffer,
+          // file_Type: fileType,
+          // file_response: fileInResponse
         }
-      } catch {
-        await this.updateAgentField(agent.id, 'faild')
-        throw new BadRequestException('Failed to send data to webhook: Webhook not reachable')
       }
-
-      return {
-        agent,
-        msg: 'ok'
-      }
+    } catch (error) {
+      await this.updateAgentField(agent.id, 'faild')
+      throw new BadRequestException(`An error Accourded: ${error}`)
     }
   }
 
-  async findById(id: number): Promise<Omit<Agent, 'webhook'>> {
+  async findById(id: number): Promise<Pick<Agent, 'params' | 'file' | 'file_response'>> {
     const agent = await this.prisma.agent.findUnique({
-      where: { id }
+      where: { id },
+      select: { params: true, file: true, file_response: true }
     })
+
     if (!agent) {
       throw new NotFoundException(`Agent ${id} not found`)
     }
-    const { webhook: _, ...result } = agent
-    return result
+    return agent
+    // // const { webhook: _, ...result } = agent
+    // const parameters = agent.params as { promptType?: string }
+    // if (parameters.promptType === 'TEXT') {
+    //   return {
+    //     params: agent.params
+    //   }
+    // } else {
+    //   return agent
+    // }
   }
 
   async findAll() {

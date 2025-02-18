@@ -21,11 +21,11 @@ export class AgentController {
   @UseInterceptors(FileInterceptor('file'))
   async handleAgent(@Body() createAgentDto: CreateAgentDto, @UploadedFile() file?: Express.Multer.File) {
     console.log('Received JSON Data:', createAgentDto)
-    if (file) {
-      console.log('Received File:', file.originalname)
-    }
-    console.log(createAgentDto.params)
-    console.log('Data received successfully')
+    // if (file) {
+    //   console.log('Received File:', file.originalname)
+    // }
+    // console.log(createAgentDto.params)
+    // console.log('Data received successfully')
     return await this.agentService.createAgent(createAgentDto, file)
   }
 
