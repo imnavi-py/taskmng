@@ -6,10 +6,8 @@ import { Agent } from '@prisma/client'
 import { randomInt } from 'crypto'
 import FormData = require('form-data')
 import * as mime from 'mime-types'
+import { updateAgentField } from '~/common/utils/update_agent'
 
-interface ResponseData {
-  file?: string
-}
 @Injectable()
 export class AgentService {
   constructor(
@@ -58,7 +56,7 @@ export class AgentService {
           fileResponse = Buffer.from(response.data.file, 'base64')
         }
         console.log('2')
-        await this.updateAgentField(agent.id, 'ok', fileResponse)
+        await updateAgentField(this.prisma, agent.id, 'ok', fileResponse)
         console.log('updateAgent')
         const updatedAgent = await this.prisma.agent.findUnique({
           where: { id: agent.id }
@@ -72,7 +70,7 @@ export class AgentService {
         }
       }
     } catch (error) {
-      await this.updateAgentField(agent.id, 'faild')
+      await updateAgentField(this.prisma, agent.id, 'faild')
       throw new BadRequestException(`An error Accourded: ${error}`)
     }
   }
@@ -103,10 +101,10 @@ export class AgentService {
     return agents.map(({ webhook, ...result }) => result)
   }
 
-  private async updateAgentField(agentId: number, status: 'ok' | 'faild', editedFile?: Buffer | null) {
-    return this.prisma.agent.update({
-      where: { id: agentId },
-      data: { status: status, file_response: editedFile }
-    })
-  }
+  // private async updateAgentField(agentId: number, status: 'ok' | 'faild', editedFile?: Buffer | null) {
+  //   return this.prisma.agent.update({
+  //     where: { id: agentId },
+  //     data: { status: status, file_response: editedFile }
+  //   })
+  // }
 }
